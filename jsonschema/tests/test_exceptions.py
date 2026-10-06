@@ -887,6 +887,21 @@ class TestErrorInitReprStr(TestCase):
         error = self.make_error()
         self.assertGreater(len(error.args), 1)
 
+    def test_iterator_context_assigns_parents(self):
+        """
+        One-shot iterators passed as context are consumed when creating
+        self.context, but their errors still receive parent links (and
+        therefore absolute paths).
+        """
+
+        for cls in (exceptions.ValidationError, exceptions.SchemaError):
+            with self.subTest(cls=cls):
+                child = cls("child", path=["name"], schema_path=[0, "type"])
+                parent = cls("parent", path=["record"], context=iter([child]))
+                self.assertEqual(parent.context, [child])
+                self.assertIs(child.parent, parent)
+                self.assertEqual(list(child.absolute_path), ["record", "name"])
+
     def test_repr(self):
         self.assertEqual(
             repr(exceptions.ValidationError(message="Hello!")),
