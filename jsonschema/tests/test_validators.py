@@ -827,6 +827,15 @@ class TestValidationErrorMessages(TestCase):
             "Unevaluated properties are not allowed (37, 'a' were unexpected)",
         )
 
+    def test_unevaluatedItems_with_boolean_items(self):
+        """
+        ``items`` also does not blow up when it is a boolean schema.
+        """
+        schema = {"items": True, "unevaluatedItems": False}
+
+        validator = validators.Draft201909Validator(schema)
+        self.assertFalse(list(validator.iter_errors([1, 2])))
+
 
 class TestValidationErrorDetails(TestCase):
     # TODO: These really need unit tests for each individual keyword, rather
@@ -1267,6 +1276,19 @@ class TestValidationErrorDetails(TestCase):
 
         self.assertEqual(e1.validator, "type")
         self.assertEqual(e2.validator, "minimum")
+
+    def test_additionalItems_with_boolean_items(self):
+        """
+        ``additionalItems`` also does not apply to a boolean ``items``.
+        """
+        instance = ["foo", 1]
+        schema = {
+            "items": True,
+            "additionalItems": {"type": "integer", "minimum": 5},
+        }
+
+        validator = validators.Draft201909Validator(schema)
+        self.assertFalse(list(validator.iter_errors(instance)))
 
     def test_propertyNames(self):
         instance = {"foo": 12}
